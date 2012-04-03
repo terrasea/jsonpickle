@@ -16,13 +16,13 @@ Additionally, it can reconstitute the object back into Python.
 Create an object.
 
     >>> obj = Thing('A String')
-    >>> print obj.name
+    >>> print(obj.name)
     A String
 
 Use jsonpickle to transform the object into a JSON string.
 
     >>> pickled = jsonpickle.encode(obj)
-    >>> print pickled
+    >>> print(pickled)
     {"py/object": "samples.Thing", "name": "A String", "child": null}
 
 Use jsonpickle to recreate a Python object from a JSON string
@@ -51,7 +51,7 @@ pass in the keyword unpicklable=False to prevent extra information from being
 added to JSON.
 
     >>> oneway = jsonpickle.encode(obj, unpicklable=False)
-    >>> print oneway
+    >>> print(oneway)
     {"name": "A String", "child": null}
 
 """
@@ -219,7 +219,7 @@ class JSONPluginMgr(object):
         for idx, name in enumerate(self._backend_names):
             try:
                 return self._decoders[name](string)
-            except self._decoder_exceptions[name], e:
+            except self._decoder_exceptions[name] as e:
                 if idx == len(self._backend_names) - 1:
                     raise e
                 else:

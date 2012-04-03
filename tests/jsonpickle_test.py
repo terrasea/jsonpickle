@@ -29,8 +29,8 @@ class PicklingTestCase(unittest.TestCase):
         self.assertEqual('a string', self.unpickler.restore('a string'))
 
     def test_unicode(self):
-        self.assertEqual(u'a string', self.pickler.flatten(u'a string'))
-        self.assertEqual(u'a string', self.unpickler.restore(u'a string'))
+        self.assertEqual('a string', self.pickler.flatten('a string'))
+        self.assertEqual('a string', self.unpickler.restore('a string'))
 
     def test_int(self):
         self.assertEqual(3, self.pickler.flatten(3))
@@ -250,18 +250,19 @@ class PicklingTestCase(unittest.TestCase):
         self.assertEqual(newobj.a.name, 'a')
         self.assertEqual(newobj.b.name, 'b')
 
+    @unittest.skip('Old style classes not in Python 3')
     def test_oldstyleclass(self):
         from pickle import _EmptyClass
-
+        
         obj = _EmptyClass()
         obj.value = 1234
-
+        
         flattened = self.pickler.flatten(obj)
         self.assertEqual(1234, flattened['value'])
-
+        
         inflated = self.unpickler.restore(flattened)
         self.assertEqual(1234, inflated.value)
-
+    
     def test_struct_time(self):
         t = time.struct_time('123456789')
 
@@ -303,6 +304,7 @@ class PicklingTestCase(unittest.TestCase):
         flattened = self.pickler.flatten(('one', 2, 3))
         self.assertEqual(flattened, ['one', 2, 3])
 
+    @unittest.skip('Python 3 does not support sorting unrelated types')
     def test_set_notunpicklable(self):
         self.pickler.unpicklable = False
 
@@ -396,7 +398,7 @@ class PicklingTestCase(unittest.TestCase):
 
         flattened = self.pickler.flatten(obj)
         self.assertEqual(flattened['typeref'], {
-                            tags.TYPE: '__builtin__.object',
+                            tags.TYPE: 'builtins.object',
                          })
 
         inflated = self.unpickler.restore(flattened)
@@ -471,10 +473,10 @@ class JSONPickleTestCase(unittest.TestCase):
         self.assertEqual(type(self.obj), type(unpickled))
 
     def test_unicode_dict_keys(self):
-        pickled = jsonpickle.encode({'é'.decode('utf-8'): 'é'.decode('utf-8')})
+        pickled = jsonpickle.encode({'é': 'é'})
         unpickled = jsonpickle.decode(pickled)
-        self.assertEqual(unpickled['é'.decode('utf-8')], 'é'.decode('utf-8'))
-        self.assertTrue('é'.decode('utf-8') in unpickled)
+        self.assertEqual(unpickled['é'], 'é')
+        self.assertTrue('é' in unpickled)
 
     def test_tuple_dict_keys(self):
         """Test that we handle dictionaries with tuples as keys.
@@ -508,7 +510,7 @@ class JSONPickleTestCase(unittest.TestCase):
         pickled = jsonpickle.encode({Thing('random'): True})
         unpickled = jsonpickle.decode(pickled)
         self.assertEqual(unpickled,
-                         {u'samples.Thing("random")': True})
+                         {'samples.Thing("random")': True})
 
     def test_list_of_objects(self):
         """Test that objects in lists are referenced correctly"""
@@ -585,7 +587,7 @@ class Mixin(object):
         return True
 
 
-class UnicodeMixin(unicode, Mixin):
+class UnicodeMixin(str, Mixin):
     def __add__(self, rhs):
         obj = super(UnicodeMixin, self).__add__(rhs)
         return UnicodeMixin(obj)
@@ -609,7 +611,7 @@ class ExternalHandlerTestCase(unittest.TestCase):
 
     def test_unicode_mixin(self):
         obj = UnicodeMixin('test')
-        self.assertEqual(unicode(obj), u'test')
+        self.assertEqual(str(obj), 'test')
 
         # Encode into JSON
         content = jsonpickle.encode(obj)
@@ -618,7 +620,7 @@ class ExternalHandlerTestCase(unittest.TestCase):
         new_obj = jsonpickle.decode(content)
         new_obj += ' passed'
 
-        self.assertEqual(unicode(new_obj), u'test passed')
+        self.assertEqual(str(new_obj), 'test passed')
         self.assertEqual(type(new_obj), UnicodeMixin)
         self.assertTrue(new_obj.ok())
 

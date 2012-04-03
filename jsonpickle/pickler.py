@@ -77,8 +77,6 @@ class Pickler(object):
         >>> p = Pickler()
         >>> p.flatten('hello world')
         'hello world'
-        >>> p.flatten(u'hello world')
-        u'hello world'
         >>> p.flatten(49)
         49
         >>> p.flatten(350.0)
@@ -169,7 +167,7 @@ class Pickler(object):
                 data[tags.REPR] = '%s/%s' % (obj.__name__,
                                              obj.__name__)
             else:
-                data = unicode(obj)
+                data = str(obj)
             return data
 
         if util.is_repr(obj):
@@ -177,7 +175,7 @@ class Pickler(object):
                 data[tags.REPR] = '%s/%s' % (obj.__class__.__module__,
                                              repr(obj))
             else:
-                data = unicode(obj)
+                data = str(obj)
             return data
 
         if util.is_dictionary_subclass(obj):
@@ -211,7 +209,7 @@ class Pickler(object):
     def _flatten_dict_obj(self, obj, data):
         """Recursively call flatten() and return json-friendly dict
         """
-        for k, v in sorted(obj.iteritems(), key=operator.itemgetter(0)):
+        for k, v in sorted(iter(obj.items()), key=operator.itemgetter(0)):
             self._flatten_key_value_pair(k, v, data)
         return data
 
@@ -226,11 +224,11 @@ class Pickler(object):
         """Flatten a key/value pair into the passed-in dictionary."""
         if not util.is_picklable(k, v):
             return data
-        if type(k) not in types.StringTypes:
+        if not isinstance(k, str):
             try:
                 k = repr(k)
             except:
-                k = unicode(k)
+                k = str(k)
         data[k] = self.flatten(v)
         return data
 
@@ -249,7 +247,7 @@ def _mktyperef(obj):
 
     >>> from jsonpickle import tags
     >>> _mktyperef(AssertionError)[tags.TYPE].rsplit('.', 1)[0]
-    'exceptions'
+    'builtins'
 
     >>> _mktyperef(AssertionError)[tags.TYPE].rsplit('.', 1)[-1]
     'AssertionError'
@@ -263,11 +261,11 @@ def _getclassdetail(obj):
     >>> _getclassdetail(Example())
     ('jsonpickle.pickler', 'Example')
     >>> _getclassdetail(25)
-    ('__builtin__', 'int')
+    ('builtins', 'int')
     >>> _getclassdetail(None)
-    ('__builtin__', 'NoneType')
+    ('builtins', 'NoneType')
     >>> _getclassdetail(False)
-    ('__builtin__', 'bool')
+    ('builtins', 'bool')
     """
     cls = obj.__class__
     module = getattr(cls, '__module__')
